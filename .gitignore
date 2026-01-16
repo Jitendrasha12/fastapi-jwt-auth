@@ -1,6 +1,29 @@
+# Virtual environment
 venv/
+env/
+.venv/
+
+# Python cache
 __pycache__/
 *.pyc
-.env
-.idea/
+*.pyo
+*.pyd
+
+# VS Code
 .vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads folder (optional)
+uploads/
+
+# Logs
+*.log
+
+# Alembic cache
+alembic/versions/__pycache__/
+
+# Pip internal files (ignore all site-packages changes)
+**/site-packages/**
