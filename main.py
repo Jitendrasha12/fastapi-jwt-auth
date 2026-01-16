@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import desc
 import models, schemas, crud
 from database import engine, get_db
 from auth import create_access_token, get_current_user, require_role
@@ -100,3 +101,67 @@ def user_dashboard(
     user: models.User = Depends(require_role("user"))
 ):
     return {"msg": f"Welcome User {user.username}"}
+
+@app.get("/posts")
+def get_posts(
+    page: int = 1,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    offset = (page - 1) * limit
+
+    total = db.query(models.Post).count()
+
+    posts = db.query(models.Post)\
+        .offset(offset)\
+        .limit(limit)\
+        .all()
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "data": posts
+    }
+
+
+@app.get("/search-posts")
+def search_posts(
+    q: str,
+    db: Session = Depends(get_db)
+):
+    posts = db.query(models.Post).filter(
+        models.Post.title.ilike(f"%{q}%")
+    ).all()
+
+    return posts
+#GET /search-posts?q=fastapi
+
+
+
+@app.get("/my-posts")
+def my_posts(
+    page: int = 1,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    offset = (page - 1) * limit
+
+    posts = db.query(models.Post)\
+        .filter(models.Post.user_id == current_user.id)\
+        .offset(offset)\
+        .limit(limit)\
+        .all()
+
+    return posts
+
+
+@app.get("/latest-posts")
+def get_latest_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post)\
+        .order_by(desc(models.Post.created_at))\
+        .all()
+
+    return posts
+
